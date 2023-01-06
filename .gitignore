@@ -1,3 +1,4 @@
 db/**
 wordpress/*
 .gitignore
+.env
