@@ -1,0 +1,58 @@
+version: '3.1'
+
+services:
+  nginx:
+    image: nginx
+    ports:
+        - '8080:8080'
+    volumes:
+        - ./nginx/:/etc/nginx/conf.d/
+        - ./logs/nginx:/var/log/nginx
+        - ./wordpress:/var/www/html
+    links:
+        - wordpress
+    restart: always
+    networks:
+      - net1
+
+  wordpress:
+    image: wordpress
+    restart: always
+    links:
+      - db
+    networks:
+        - net1
+    ports:
+      - 9000:80
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: database
+      WORDPRESS_DB_PASSWORD: WordPress256$
+      WORDPRESS_DB_NAME: wordpress
+    volumes:
+      - ./wordpress:/var/www/html
+      - type: bind
+        source: ./docker-servername.conf
+        target: /etc/apache2/conf-enabled/docker-servername.conf
+
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: database
+      MYSQL_PASSWORD: WordPress256$
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+
+    networks:
+        - net1
+    volumes:
+      - ./db/:/var/lib/mysql/
+    command: --default_authentication_plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_general_ci
+      --explicit_defaults_for_timestamp=true
+
+networks:
+  net1:
+    driver: bridge
